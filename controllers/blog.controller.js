@@ -123,12 +123,36 @@ export const getAllBlogs = CatchAsync(async (req, res, next) => {
   let blogs = await Blog.findAll({
     where: queryString,
   });
-
-  res.status(200).json({
+  const newBlogs = blogs.map((blog) => {
+    blog.blogImage = constructImageUrl(req, blog.blogImage);
+    blog.sections = JSON.parse(blog.sections).map((section) => {
+      const {
+        id,
+        name,
+        text,
+        image,
+        sectionImageAltText,
+        sectionImageDescription,
+        sectionImageCaption,
+      } = section;
+      return {
+        id,
+        name,
+        text,
+        image: constructImageUrl(req, image),
+        sectionImageAltText,
+        sectionImageDescription,
+        sectionImageCaption,
+      };
+    });
+    blog.sections = JSON.stringify(blog.sections);
+    return blog;
+  });
+  res.json({
     success: true,
-    result: blogs.length,
+    result: newBlogs.length,
     message: "Blogs read successfully",
-    blogs: blogs,
+    blogs: newBlogs,
   });
 });
 
@@ -143,10 +167,34 @@ export const getBlogID = CatchAsync(async (req, res, next) => {
     return next(new AppError("Blog not Found with that ID!", 404));
   }
 
-  res.status(200).json({
+  blog.blogImage = constructImageUrl(req, blog.blogImage);
+
+  // Apply host and URL to section images
+  blog.sections = JSON.parse(blog.sections).map((section) => {
+    const {
+      id,
+      name,
+      text,
+      image,
+      sectionImageAltText,
+      sectionImageDescription,
+      sectionImageCaption,
+    } = section;
+    return {
+      id,
+      name,
+      text,
+      image: constructImageUrl(req, image),
+      sectionImageAltText,
+      sectionImageDescription,
+      sectionImageCaption,
+    };
+  });
+  blog.sections = JSON.stringify(blog.sections);
+  res.status(201).json({
     success: true,
-    message: "Blog found successfully",
-    result: blog,
+    message: "Blog Updated Successfully",
+    blog: blog,
   });
 });
 
@@ -159,10 +207,34 @@ export const getBlogBySlug = CatchAsync(async (req, res, next) => {
   if (!blog) {
     return next(new AppError("Blog not Found with that slug!", 404));
   }
-  res.status(200).json({
+  blog.blogImage = constructImageUrl(req, blog.blogImage);
+
+  // Apply host and URL to section images
+  blog.sections = JSON.parse(blog.sections).map((section) => {
+    const {
+      id,
+      name,
+      text,
+      image,
+      sectionImageAltText,
+      sectionImageDescription,
+      sectionImageCaption,
+    } = section;
+    return {
+      id,
+      name,
+      text,
+      image: constructImageUrl(req, image),
+      sectionImageAltText,
+      sectionImageDescription,
+      sectionImageCaption,
+    };
+  });
+  blog.sections = JSON.stringify(blog.sections);
+  res.status(201).json({
     success: true,
-    message: "blog found successfully ",
-    result: blog,
+    message: "Blog Updated Successfully",
+    blog: blog,
   });
 });
 
@@ -223,9 +295,7 @@ export const updateBlog = CatchAsync(async (req, res, next) => {
   existingBlog.blogImageCaption = req.body.blogImageCaption
     ? req.body.blogImageCaption
     : existingBlog.blogImageCaption;
-  existingBlog.blogImage = blogImageUrl
-    ? `${req.protocol}://${req.get("host")}/uploads/${blogImageUrl}`
-    : existingBlog.blogImage;
+  existingBlog.blogImage = blogImageUrl ? blogImageUrl : existingBlog.blogImage;
 
   if (req.body.sections) {
     const newSections = JSON.parse(req.body.sections);
@@ -370,7 +440,6 @@ export const approveBlog = CatchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Blog approved successfully",
-    blog,
   });
 });
 
@@ -385,6 +454,5 @@ export const rejectBlog = CatchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Blog rejected successfully",
-    blog,
   });
 });

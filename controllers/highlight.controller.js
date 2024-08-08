@@ -81,20 +81,18 @@ export const getHighlights = CatchAsync(async (req, res, next) => {
     return next(new AppError("Highlight not found", 404));
   }
 
-  const highlightSections = highlights.highlightSections.map((section) => ({
-    ...section,
-    image: constructImageUrl(req, section.image),
-  }));
-
-  const transformedHighlightSections = {
+  const highlightResponse = {
     ...highlights.toJSON(),
-    highlightSections,
+    highlightSections: JSON.parse(highlights.highlightSections).map(
+      (section) => ({
+        ...section,
+        image: constructImageUrl(req, section.image),
+      })
+    ),
   };
-
   res.status(200).json({
     success: true,
-    message: "Highlight fetched successfully",
-    highlights: transformedHighlightSections,
+    highlights: highlightResponse,
   });
 });
 
